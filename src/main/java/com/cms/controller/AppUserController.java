@@ -34,7 +34,7 @@ public class AppUserController {
 
     @RequestMapping(value = "/users", method = RequestMethod.POST)
     public void saveAppUser(@RequestBody AppUser appUser) {
-           String hashedPassword = passwordEncoder.encode(appUser.getPassword());
+            String hashedPassword = passwordEncoder.encode(appUser.getPassword());
             service.save(appUser.setPassword(hashedPassword));
     }
 
