@@ -1,15 +1,13 @@
 package com.cms;
 
-import com.cms.model.entity.Link;
+import com.cms.model.entity.FileUploadDir;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @SpringBootApplication
 @EnableConfigurationProperties({
-		Link.class
+		FileUploadDir.class
 })
 public class CmsBackendSpringBootApplication {
 

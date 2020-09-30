@@ -3,18 +3,26 @@ package com.cms.controller;
 
 import com.cms.model.entity.Article;
 import com.cms.model.service.ArticleService;
+import com.cms.model.service.FileUploaderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.util.List;
 
-@CrossOrigin(origins = "*", allowedHeaders = "*")
+@CrossOrigin(origins = "*",
+        allowedHeaders = "*",
+        allowCredentials = "true",
+        methods = {RequestMethod.POST, RequestMethod.PUT, RequestMethod.GET, RequestMethod.DELETE})
 @RestController
 @RequestMapping("/api/v1")
 public class ArticleController {
 
     @Autowired
     private ArticleService articleService;
+    @Autowired
+    private FileUploaderService fileUploaderService;
 
 
     @RequestMapping("/articles")
@@ -28,31 +36,43 @@ public class ArticleController {
     public Article findById(@PathVariable("Id") String articleId) {
         Article article = new Article();
         Article art = articleService.findOne(article, Long.parseLong(articleId));
+        String cover = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/api/v1/downloadFile/")
+                .path(art.getCover())
+                .toUriString();
+        art.setCover(cover);
+        String thumbnail = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/api/v1/downloadFile/")
+                .path(art.getThumbnail())
+                .toUriString();
+        art.setThumbnail(thumbnail);
+        String attachment = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/api/v1/downloadFile/")
+                .path(art.getAttachment())
+                .toUriString();
+        art.setAttachment(attachment);
         return art;
     }
 
 
-//    @RequestMapping(value = "/articles", method = RequestMethod.POST )
-//     public void saveArticle(@RequestBody Article article) {
-//        articleService.save(article);
-//    }
-
     @RequestMapping(value = "/articles", method = RequestMethod.POST)
-    public void saveArticle(
-            @ModelAttribute Article article) {
-        // input name != file name
+    public void saveArticle(@ModelAttribute Article article,
+                            @RequestParam("cov") MultipartFile cov,
+                            @RequestParam("thu") MultipartFile thu,
+                            @RequestParam("att") MultipartFile att) {
         try {
-//            String covName = cov.getOriginalFilename();
-//            Uploader.saveFile(cov.getInputStream(), covName);
-//            article.setCover(covName);
-//
-//            String thuName = thu.getOriginalFilename();
-//            Uploader.saveFile(thu.getInputStream(), thuName);
-//            article.setThumbnail(thuName);
-//
-//            String attName = att.getOriginalFilename();
-//            Uploader.saveFile(att.getInputStream(), attName);
-//            article.setAttachment(attName);
+            String covName = cov.getOriginalFilename();
+            fileUploaderService.storeFile(cov);
+            article.setCover(covName);
+
+            String thuName = thu.getOriginalFilename();
+            fileUploaderService.storeFile(thu);
+            article.setThumbnail(thuName);
+
+            String attName = att.getOriginalFilename();
+            fileUploaderService.storeFile(att);
+            article.setAttachment(attName);
+
             articleService.save(article);
 
         } catch (Exception e) {
@@ -61,14 +81,40 @@ public class ArticleController {
     }
 
     @RequestMapping(value = "/articles/{Id}", method = RequestMethod.PUT)
-    public void updateArticle(@ModelAttribute Article article , @PathVariable("Id") String articleId , @RequestBody Article article1) {
-        System.out.println("///////////////");
-        System.out.println(articleId);
-        System.out.println(article.getTitle());
-        System.out.println(article.getRegister_date());
-        System.out.println(article.getType());
-        System.out.println(" article1 " + article1.getTitle());
-        //  articleService.update(article.setId(Long.parseLong(articleId)));
+    public void updateArticle(@PathVariable("Id") String articleId,
+                              @RequestParam(required = false, name = "cov") MultipartFile cov,
+                              @RequestParam(required = false, name = "thu") MultipartFile thu,
+                              @RequestParam(required = false, name = "att") MultipartFile att,
+                              @ModelAttribute Article article) {
+        Article art = articleService.findOne(article, Long.parseLong(articleId));
+        try {
+            if (cov != null) {
+                String covName = cov.getOriginalFilename();
+                fileUploaderService.storeFile(cov);
+                article.setCover(covName);
+            } else {
+                article.setCover(art.getCover());
+            }
+            if (thu != null) {
+                String thuName = thu.getOriginalFilename();
+                fileUploaderService.storeFile(thu);
+                article.setThumbnail(thuName);
+            } else {
+                article.setThumbnail(art.getThumbnail());
+            }
+            if (att != null) {
+                String attName = att.getOriginalFilename();
+                fileUploaderService.storeFile(att);
+                article.setAttachment(attName);
+            } else {
+                article.setAttachment(art.getAttachment());
+            }
+
+            articleService.update(article.setId(Long.parseLong(articleId)));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     @RequestMapping(value = "/articles/{Id}", method = RequestMethod.DELETE)

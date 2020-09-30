@@ -17,7 +17,6 @@ public class AppUserService {
         repository.save(appUser);
     }
 
-
     public void update(AppUser appUser) {
         repository.update(appUser);
     }
@@ -25,7 +24,6 @@ public class AppUserService {
     public void delete(AppUser appUser){
         repository.delete(appUser);
     }
-
 
     public List<AppUser> findAll() {
         return repository.findAll(AppUser.class);

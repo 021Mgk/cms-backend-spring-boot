@@ -2,10 +2,12 @@ package com.cms.controller;
 
 
 import com.cms.model.entity.AuthRequest;
+import com.cms.service.CustomUserDetailsService;
 import com.cms.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.Cookie;
@@ -14,7 +16,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 import java.util.Map;
 
-@CrossOrigin(origins = "*", allowedHeaders = "*" , allowCredentials ="true")
+@CrossOrigin(origins = "*", allowedHeaders = "*", allowCredentials = "true")
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
@@ -22,6 +24,37 @@ public class AuthController {
     private JwtUtil jwtUtil;
     @Autowired
     private AuthenticationManager authenticationManager;
+    @Autowired
+    private CustomUserDetailsService service;
+
+
+    @RequestMapping(value = "/isValid")
+    public Object isValid(HttpServletRequest request) throws Exception {
+        String token = null;
+        String username = null;
+        Map map = new HashMap<String, String>();
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (cookie.getName().equals("token")) {
+                    token = cookie.getValue();
+                    username = jwtUtil.extractUsername(token);
+                }
+            }
+        } else {
+            map.put("success", false);
+            return map;
+        }
+        UserDetails userDetails = service.loadUserByUsername(username);
+        if (jwtUtil.validateToken(token, userDetails)) {
+            map.put("success", true);
+            return map;
+        } else {
+            map.put("success", false);
+            return map;
+        }
+
+    }
 
 
     @RequestMapping(value = "/logout")

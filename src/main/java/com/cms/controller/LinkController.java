@@ -1,6 +1,7 @@
 package com.cms.controller;
 
 import com.cms.model.entity.Link;
+import com.cms.model.service.FileUploaderService;
 import com.cms.model.service.LinkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -16,13 +17,19 @@ import java.io.IOException;
 import java.util.List;
 
 
-@CrossOrigin(origins = "*", allowedHeaders = "*", allowCredentials = "true")
+@CrossOrigin(origins = "*",
+        allowedHeaders = "*",
+        allowCredentials = "true",
+        methods = {RequestMethod.POST, RequestMethod.PUT, RequestMethod.GET, RequestMethod.DELETE})
 @RestController
 @RequestMapping("/api/v1")
 public class LinkController {
 
     @Autowired
     private LinkService linksService;
+
+    @Autowired
+    private FileUploaderService fileUploaderService;
 
 
     @RequestMapping("/links")
@@ -49,8 +56,7 @@ public class LinkController {
     public void saveArticle(@RequestParam("file") MultipartFile file, @ModelAttribute Link links) {
         try {
             String fileName = file.getOriginalFilename();
-            //Uploader.saveFile(file.getInputStream() , fileName);
-            linksService.storeFile(file);
+            fileUploaderService.storeFile(file);
             links.setIcon(fileName);
             linksService.save(links);
         } catch (Exception e) {
@@ -65,10 +71,11 @@ public class LinkController {
         try {
             if (file != null) {
                 String fileName = file.getOriginalFilename();
-                linksService.storeFile(file);
+                fileUploaderService.storeFile(file);
                 links.setIcon(fileName);
+            } else {
+                links.setIcon(link.getIcon());
             }
-            links.setIcon(link.getIcon());
             linksService.update(links.setId(Long.parseLong(linkId)));
         } catch (Exception e) {
             e.printStackTrace();
@@ -93,32 +100,6 @@ public class LinkController {
     public List<Link> getHeaderLinks() {
         List<Link> links = linksService.findByWhere("o.place = 1");
         return links;
-    }
-
-
-    @RequestMapping("/downloadFile/{fileName:.+}")
-    public ResponseEntity<Resource> downloadFile(@PathVariable String fileName, HttpServletRequest request) {
-        // Load file as Resource
-        Resource resource = linksService.loadFileAsResource(fileName);
-
-        // Try to determine file's content type
-        String contentType = null;
-        try {
-            contentType = request.getServletContext().getMimeType(resource.getFile().getAbsolutePath());
-        } catch (IOException ex) {
-            //logger.info("Could not determine file type.");
-
-        }
-
-        // Fallback to the default content type if type could not be determined
-        if (contentType == null) {
-            contentType = "application/octet-stream";
-        }
-
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(contentType))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
-                .body(resource);
     }
 
 }

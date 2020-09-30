@@ -2,12 +2,12 @@ package com.cms.model.entity;
 
 
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
+
 
 import javax.persistence.*;
 
 
-@ConfigurationProperties(prefix = "file")
+
 @Entity(name = "link")
 @Table(name="link")
 public class Link {
@@ -21,8 +21,6 @@ public class Link {
     private int ord;
     private String icon;
 
-    @Column(name = "upload_dir")
-    private String uploadDir;
 
     @Column(columnDefinition = "int", length = 1)
     private boolean active;
@@ -32,13 +30,12 @@ public class Link {
 
     }
 
-    public Link(String title, String link, int place, int ord, String icon, String uploadDir, boolean active) {
+    public Link(String title, String link, int place, int ord, String icon, boolean active) {
         this.title = title;
         this.link = link;
         this.place = place;
         this.ord = ord;
         this.icon = icon;
-        this.uploadDir = uploadDir;
         this.active = active;
     }
 
@@ -93,15 +90,6 @@ public class Link {
 
     public Link setIcon(String icon) {
         this.icon = icon;
-        return this;
-    }
-
-    public String getUploadDir() {
-        return uploadDir;
-    }
-
-    public Link setUploadDir(String uploadDir) {
-        this.uploadDir = uploadDir;
         return this;
     }
 
