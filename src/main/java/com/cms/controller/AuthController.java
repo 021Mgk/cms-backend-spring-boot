@@ -90,7 +90,8 @@ public class AuthController {
             return map;
         } catch (Exception e) {
             //throw  new Exception("invalid password or username");
-            map.put("success", false);
+            map.put("success", false );
+            map.put("message" ,"invalid password or username" );
             return map;
         }
     }
