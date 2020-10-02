@@ -4,6 +4,9 @@ import javax.persistence.*;
 
 @Entity(name = "user")
 @Table(name = "user_tbl")
+@NamedQueries({
+        @NamedQuery(name="userInfo" ,query = "SELECT o.name, o.username,o.family FROM user o WHERE o.username = :username")
+})
 public class AppUser {
 
     @Id

@@ -1,7 +1,9 @@
 package com.cms.controller;
 
 
+import com.cms.model.entity.AppUser;
 import com.cms.model.entity.AuthRequest;
+import com.cms.model.service.AppUserService;
 import com.cms.service.CustomUserDetailsService;
 import com.cms.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +28,8 @@ public class AuthController {
     private AuthenticationManager authenticationManager;
     @Autowired
     private CustomUserDetailsService service;
+    @Autowired
+    private AppUserService appUserService;
 
 
     @RequestMapping(value = "/isValid")
@@ -47,6 +51,13 @@ public class AuthController {
         }
         UserDetails userDetails = service.loadUserByUsername(username);
         if (jwtUtil.validateToken(token, userDetails)) {
+            AppUser appUser =  appUserService.findByWhere("o.username = '" + username + "'").get(0);
+            Map usrInf = new HashMap<String, String>();
+            usrInf.put("name" , appUser.getName());
+            usrInf.put("family" , appUser.getFamily());
+            usrInf.put("username" , appUser.getUsername());
+            usrInf.put("id" , appUser.getId());
+            map.put("userInfo" , usrInf);
             map.put("success", true);
             return map;
         } else {

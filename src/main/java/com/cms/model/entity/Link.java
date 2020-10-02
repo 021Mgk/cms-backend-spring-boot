@@ -20,6 +20,8 @@ public class Link {
     private int place;
     private int ord;
     private String icon;
+    @Column(name = "user_id")
+    private Long userId;
 
 
     @Column(columnDefinition = "int", length = 1)
@@ -30,13 +32,14 @@ public class Link {
 
     }
 
-    public Link(String title, String link, int place, int ord, String icon, boolean active) {
+    public Link(String title, String link, int place, int ord, String icon, boolean active , Long userId) {
         this.title = title;
         this.link = link;
         this.place = place;
         this.ord = ord;
         this.icon = icon;
         this.active = active;
+        this.userId = userId;
     }
 
     public Long getId() {
@@ -46,6 +49,14 @@ public class Link {
     public Link setId(Long id) {
         this.id = id;
         return this;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
     public String getTitle() {

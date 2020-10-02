@@ -1,15 +1,22 @@
 package com.cms.controller;
 
+import com.cms.model.entity.AppUser;
 import com.cms.model.entity.Link;
+import com.cms.model.service.AppUserService;
 import com.cms.model.service.FileUploaderService;
 import com.cms.model.service.LinkService;
+import com.cms.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 @CrossOrigin(origins = "*",
@@ -19,6 +26,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1")
 public class LinkController {
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @Autowired
     private LinkService linksService;
@@ -26,10 +35,37 @@ public class LinkController {
     @Autowired
     private FileUploaderService fileUploaderService;
 
+    @Autowired
+    private AppUserService appUserService;
+
 
     @RequestMapping("/links")
     public List<Link> getLinks() {
         List<Link> links = linksService.findAll();
+        return links;
+    }
+
+    @RequestMapping("/mylinks")
+    public List<Link> getMyLinks(HttpServletRequest request) {
+        List<Link> links =null;
+        try {
+            String token = null;
+            String username = null;
+            Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                    if (cookie.getName().equals("token")) {
+                        token = cookie.getValue();
+                        username = jwtUtil.extractUsername(token);
+                    }
+                }
+            }
+            AppUser appUser = appUserService.findByWhere("o.username = '" + username + "'").get(0);
+            links = linksService.findByWhere("o.userId =" + appUser.getId() );
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return links;
     }
 
@@ -48,11 +84,24 @@ public class LinkController {
 
 
     @RequestMapping(value = "/links", method = RequestMethod.POST)
-    public void saveArticle(@RequestParam(required = false , name = "file") MultipartFile file, @ModelAttribute Link links) {
+    public void saveArticle(@RequestParam(required = false , name = "file") MultipartFile file, @ModelAttribute Link links , HttpServletRequest request) {
         try {
+            String token = null;
+            String username = null;
+            Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                    if (cookie.getName().equals("token")) {
+                        token = cookie.getValue();
+                        username = jwtUtil.extractUsername(token);
+                    }
+                }
+            }
             String fileName = file.getOriginalFilename();
             fileUploaderService.storeFile(file);
+            AppUser appUser =  appUserService.findByWhere("o.username = '" + username + "'").get(0);
             links.setIcon(fileName);
+            links.setUserId(appUser.getId());
             linksService.save(links);
         } catch (Exception e) {
             e.printStackTrace();

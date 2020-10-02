@@ -5,6 +5,9 @@ import com.cms.model.repository.GenericRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 import java.util.List;
 
 @Service
@@ -36,4 +39,5 @@ public class AppUserService {
     public List<AppUser> findByWhere(String where) {
         return repository.findByWhere(AppUser.class , where);
     }
+
 }
