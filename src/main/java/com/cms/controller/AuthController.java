@@ -34,37 +34,41 @@ public class AuthController {
 
     @RequestMapping(value = "/isValid")
     public Object isValid(HttpServletRequest request) throws Exception {
-        String token = null;
-        String username = null;
         Map map = new HashMap<String, String>();
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if (cookie.getName().equals("token")) {
-                    token = cookie.getValue();
-                    username = jwtUtil.extractUsername(token);
-                }
+        try {
+            String token = jwtUtil.extractTokenFromCookie(request);
+            System.out.println("token " + token);
+            if (token == null) {
+                map.put("success", false);
+                return map;
             }
-        } else {
+            String username = jwtUtil.extractUsername(token);
+            System.out.println("username " + username);
+            if (username == null) {
+                map.put("success", false);
+                return map;
+            }
+            UserDetails userDetails = service.loadUserByUsername(username);
+            Boolean isValidToken = jwtUtil.validateToken(token, userDetails);
+            System.out.println("valid " + isValidToken);
+            if (!isValidToken) {
+                map.put("success", false);
+                return map;
+            } else {
+                AppUser appUser = appUserService.findByWhere("o.username = '" + username + "'").get(0);
+                Map userInf = new HashMap<String, String>();
+                userInf.put("name", appUser.getName());
+                userInf.put("family", appUser.getFamily());
+                userInf.put("username", appUser.getUsername());
+                userInf.put("id", appUser.getId());
+                map.put("userInfo", userInf);
+                map.put("success", true);
+                return map;
+            }
+        } catch (Exception e) {
             map.put("success", false);
             return map;
         }
-        UserDetails userDetails = service.loadUserByUsername(username);
-        if (jwtUtil.validateToken(token, userDetails)) {
-            AppUser appUser =  appUserService.findByWhere("o.username = '" + username + "'").get(0);
-            Map usrInf = new HashMap<String, String>();
-            usrInf.put("name" , appUser.getName());
-            usrInf.put("family" , appUser.getFamily());
-            usrInf.put("username" , appUser.getUsername());
-            usrInf.put("id" , appUser.getId());
-            map.put("userInfo" , usrInf);
-            map.put("success", true);
-            return map;
-        } else {
-            map.put("success", false);
-            return map;
-        }
-
     }
 
 
@@ -86,23 +90,33 @@ public class AuthController {
     public Object getToken(@RequestBody AuthRequest authRequest, HttpServletResponse response) throws Exception {
         Map map = new HashMap<String, String>();
         try {
-
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword())
             );
             String token = jwtUtil.generateToken(authRequest.getUsername());
-            map.put("success", true);
             map.put("token", token);
+
+            AppUser appUser = appUserService.findByWhere("o.username = '" + authRequest.getUsername() + "'").get(0);
+            Map userInf = new HashMap<String, String>();
+            userInf.put("name", appUser.getName());
+            userInf.put("family", appUser.getFamily());
+            userInf.put("username", appUser.getUsername());
+            userInf.put("id", appUser.getId());
+            map.put("userInfo", userInf);
+
+            map.put("success", true);
+
             Cookie cookie = new Cookie("token", token);
             cookie.setPath("/");
             cookie.setHttpOnly(true);
             //cookie.setSecure(true);
             response.addCookie(cookie);
+
             return map;
         } catch (Exception e) {
             //throw  new Exception("invalid password or username");
-            map.put("success", false );
-            map.put("message" ,"invalid password or username" );
+            map.put("success", false);
+            map.put("message", "invalid password or username");
             return map;
         }
     }

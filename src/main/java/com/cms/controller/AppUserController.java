@@ -15,10 +15,9 @@ public class AppUserController {
 
     @Autowired
     private AppUserService service;
-
-
     @Autowired
     PasswordEncoder passwordEncoder;
+
 
     @RequestMapping("/users")
     public List<AppUser> getAllUsers(){
@@ -37,7 +36,6 @@ public class AppUserController {
             String hashedPassword = passwordEncoder.encode(appUser.getPassword());
             service.save(appUser.setPassword(hashedPassword));
     }
-
 
     @RequestMapping(value = "/users/{Id}", method = RequestMethod.PUT)
     public void updateAppUser(@PathVariable("Id") String appUserId, @RequestBody AppUser appUser) {

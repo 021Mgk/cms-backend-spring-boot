@@ -9,14 +9,9 @@ import com.cms.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 
 @CrossOrigin(origins = "*",
@@ -45,23 +40,13 @@ public class LinkController {
         return links;
     }
 
-    @RequestMapping("/mylinks")
-    public List<Link> getMyLinks(HttpServletRequest request) {
-        List<Link> links =null;
+    @RequestMapping("/userLinks")
+    public List<Link> getUserLinks(HttpServletRequest request) {
+        List<Link> links = null;
         try {
-            String token = null;
-            String username = null;
-            Cookie[] cookies = request.getCookies();
-            if (cookies != null) {
-                for (Cookie cookie : cookies) {
-                    if (cookie.getName().equals("token")) {
-                        token = cookie.getValue();
-                        username = jwtUtil.extractUsername(token);
-                    }
-                }
-            }
+            String username = jwtUtil.extractUsername(jwtUtil.extractTokenFromCookie(request));
             AppUser appUser = appUserService.findByWhere("o.username = '" + username + "'").get(0);
-            links = linksService.findByWhere("o.userId =" + appUser.getId() );
+            links = linksService.findByWhere("o.userId =" + appUser.getId());
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -74,32 +59,18 @@ public class LinkController {
     public Link findById(@PathVariable("Id") String linkId) {
         Link links = new Link();
         Link link = linksService.findOne(links, Long.parseLong(linkId));
-        String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/api/v1/downloadFile/")
-                .path(link.getIcon())
-                .toUriString();
-        link.setIcon(fileDownloadUri);
+        link.setIcon(fileUploaderService.getFileDownloadUri(link.getIcon()));
         return link;
     }
 
 
     @RequestMapping(value = "/links", method = RequestMethod.POST)
-    public void saveArticle(@RequestParam(required = false , name = "file") MultipartFile file, @ModelAttribute Link links , HttpServletRequest request) {
+    public void saveArticle(@RequestParam(required = false, name = "file") MultipartFile file, @ModelAttribute Link links, HttpServletRequest request) {
         try {
-            String token = null;
-            String username = null;
-            Cookie[] cookies = request.getCookies();
-            if (cookies != null) {
-                for (Cookie cookie : cookies) {
-                    if (cookie.getName().equals("token")) {
-                        token = cookie.getValue();
-                        username = jwtUtil.extractUsername(token);
-                    }
-                }
-            }
+            String username = jwtUtil.extractUsername(jwtUtil.extractTokenFromCookie(request));
             String fileName = file.getOriginalFilename();
             fileUploaderService.storeFile(file);
-            AppUser appUser =  appUserService.findByWhere("o.username = '" + username + "'").get(0);
+            AppUser appUser = appUserService.findByWhere("o.username = '" + username + "'").get(0);
             links.setIcon(fileName);
             links.setUserId(appUser.getId());
             linksService.save(links);

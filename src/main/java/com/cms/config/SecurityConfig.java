@@ -46,7 +46,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         //allowed paths
-        String[] paths = new String[]{"/auth/**", "/api/v1/users"};
+        String[] paths = new String[]{"/auth/**", "/api/v1/**"};
         http.cors().and().csrf().disable().authorizeRequests()
                 .antMatchers(paths).permitAll().anyRequest().authenticated()
                 .and().exceptionHandling().and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);

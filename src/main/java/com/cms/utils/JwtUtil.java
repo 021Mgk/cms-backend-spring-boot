@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
 import java.util.HashMap;
@@ -20,11 +21,19 @@ public class JwtUtil {
     @Value("${jwt.secret}")
     private String secret;
 
-    public String getSecret() {
-        return secret;
-    }
 
-    //private String secret = "ssssssssss";
+    public String extractTokenFromCookie(HttpServletRequest request) {
+        String token = null;
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (cookie.getName().equals("token")) {
+                    token = cookie.getValue();
+                }
+            }
+        }
+        return token;
+    }
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);

@@ -1,14 +1,17 @@
 package com.cms.controller;
 
 
+import com.cms.model.entity.AppUser;
 import com.cms.model.entity.Article;
+import com.cms.model.service.AppUserService;
 import com.cms.model.service.ArticleService;
 import com.cms.model.service.FileUploaderService;
+import com.cms.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 @CrossOrigin(origins = "*",
@@ -18,9 +21,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1")
 public class ArticleController {
-
+    @Autowired
+    private JwtUtil jwtUtil;
     @Autowired
     private ArticleService articleService;
+    @Autowired
+    private AppUserService appUserService;
     @Autowired
     private FileUploaderService fileUploaderService;
 
@@ -31,25 +37,30 @@ public class ArticleController {
         return articles;
     }
 
+    @RequestMapping("/userArticles")
+    public List<Article> getUserLinks(HttpServletRequest request) {
+        List<Article> articles = null;
+        try {
+            String username = jwtUtil.extractUsername(jwtUtil.extractTokenFromCookie(request));
+            AppUser appUser = appUserService.findByWhere("o.username = '" + username + "'").get(0);
+            articles = articleService.findByWhere("o.userId =" + appUser.getId());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return articles;
+    }
+
 
     @RequestMapping("/articles/{Id}")
     public Article findById(@PathVariable("Id") String articleId) {
         Article article = new Article();
         Article art = articleService.findOne(article, Long.parseLong(articleId));
-        String cover = ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/api/v1/downloadFile/")
-                .path(art.getCover())
-                .toUriString();
+        String cover = fileUploaderService.getFileDownloadUri(art.getCover());
         art.setCover(cover);
-        String thumbnail = ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/api/v1/downloadFile/")
-                .path(art.getThumbnail())
-                .toUriString();
+        String thumbnail = fileUploaderService.getFileDownloadUri(art.getThumbnail());
         art.setThumbnail(thumbnail);
-        String attachment = ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/api/v1/downloadFile/")
-                .path(art.getAttachment())
-                .toUriString();
+        String attachment = fileUploaderService.getFileDownloadUri(art.getAttachment());
         art.setAttachment(attachment);
         return art;
     }

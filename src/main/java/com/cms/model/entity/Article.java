@@ -21,6 +21,7 @@ public class Article {
     //@NotNull(message = "عنوان ضروری می باشد")
     private String title;
     private String summary;
+    @Column(columnDefinition = "longtext")
     private String text;
     private String thumbnail;
     private String cover;
