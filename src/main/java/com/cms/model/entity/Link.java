@@ -4,13 +4,16 @@ package com.cms.model.entity;
 
 
 
+
+import com.cms.service.LoggedUser;
+
 import javax.persistence.*;
 
 
 
 @Entity(name = "link")
 @Table(name="link")
-public class Link {
+public class Link{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,6 +27,9 @@ public class Link {
     private Long userId;
 
 
+    private Long updatedByUserId;
+
+
     @Column(columnDefinition = "int", length = 1)
     private boolean active;
 
@@ -32,7 +38,7 @@ public class Link {
 
     }
 
-    public Link(String title, String link, int place, int ord, String icon, boolean active , Long userId) {
+    public Link(String title, String link, int place, int ord, String icon, boolean active , Long userId , Long updatedByUserId) {
         this.title = title;
         this.link = link;
         this.place = place;
@@ -40,6 +46,7 @@ public class Link {
         this.icon = icon;
         this.active = active;
         this.userId = userId;
+        this.updatedByUserId = updatedByUserId;
     }
 
     public Long getId() {
@@ -57,6 +64,15 @@ public class Link {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public Long getUpdatedByUserId() {
+        return updatedByUserId;
+    }
+
+    public Link setUpdatedByUserId(Long updatedByUserId) {
+        this.updatedByUserId = updatedByUserId;
+        return this;
     }
 
     public String getTitle() {
